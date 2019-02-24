@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+import ssl
+from OpenSSL import crypto
+from OpenSSL import SSL
+import datetime
+import socket
+import sys
+import idna
+hostName = sys.argv[-1]
+#Color for output
+purpureText = '\033[95m\033[1m'
+greenText = '\033[92m\033[1m'
+redText = '\033[91m\033[1m'
+endColor = '\033[0m'
+print "------------------"
+hostName = hostName.lower()
+if hostName[:7] == "http://" : hostName = hostName[:7]
+elif hostName[:8] == "https://" : hostName = hostName[:8]
+
+sans = None
+
+try:
+	ipAddress = socket.gethostbyname(hostName)#IP
+	
+	sock = socket.socket()
+	sock.connect((hostName, 443))
+	peername = sock.getpeername()
+	ctx = SSL.Context(SSL.SSLv23_METHOD)
+	ctx.check_hostname = False
+	ctx.verify_mode = SSL.VERIFY_NONE
+
+	sock_ssl = SSL.Connection(ctx, sock)
+	sock_ssl.set_connect_state()
+	sock_ssl.set_tlsext_host_name(hostName)
+	sock_ssl.do_handshake()
+	x509 = sock_ssl.get_peer_certificate()
+	sock_ssl.close()
+	sock.close()
+	for i in range(x509.get_extension_count()):
+		ext = x509.get_extension(i)
+		if ext.get_short_name() == "subjectAltName":#SANs
+			sans = ext.__str__().split("DNS:")
+			if sans[0] == "":del sans[0]
+			for j in range(len(sans)):
+				sans[j] = sans[j].strip()
+				if sans[j][-1] == ",":
+					sans[j] = sans[j][:-1]
+
+	issuer = x509.get_issuer().commonName #Issuer
+
+	From = x509.get_notBefore()
+	To = x509.get_notAfter()
+
+	ValidFrom = datetime.date(int(From[:4]), int(From[4:6]),int(From[6:8]))
+	ValidTo = datetime.date(int(To[:4]), int(To[4:6]),int(To[6:8]))
+
+	today = datetime.date.today()
+	days = int(str(ValidTo-today).split()[0]) #expire in x days
+
+	print purpureText + hostName + greenText + ' resolves to '+ purpureText + ipAddress + endColor + "\n"
+	if sans != None:
+
+		if (hostName in sans) or ("*" + hostName[hostName.find('.'):] in sans):
+			print greenText + "The hostname " + purpureText + hostName + greenText+ " is correctly listed in the certificate." + endColor
+		else:
+			print redText + "The hostname " + purpureText + hostName + redText+ " is incorrectly listed in the certificate." + endColor
+		
+		print purpureText + "Valid From :" + endColor , ValidFrom
+		print purpureText + "Valid To :" + endColor , ValidTo
+
+		if days > 0: 
+			print greenText +"The certificate will expire in"  + purpureText , days , greenText + "days." + endColor
+		else:
+			print endColor + "This certificate has expired" , days , "days befor." + endColor
+
+		if issuer:
+			print greenText + "The certificate was issued by:\n" + purpureText + issuer + endColor
+		print 
+
+		print greenText+"Common name:"+endColor, x509.get_subject().commonName
+
+		print greenText + "SANs : " + endColor
+		j = 0
+		for i in sans:
+			print i+";" ,
+			j += 1
+			if j > 3:
+				j = 0 
+				print
+	else:
+		print redText + "Can't read the certificate" + endColor
+except socket.gaierror: 
+	print hostName + redText + "'s server IP address could not be found." + endColor
+print "\n------------------"
