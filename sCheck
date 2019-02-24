@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import ssl
 from OpenSSL import crypto
 from OpenSSL import SSL
 import datetime
 import socket
 import sys
-import idna
 hostName = sys.argv[-1]
 #Color for output
 purpureText = '\033[95m\033[1m'
@@ -14,16 +12,17 @@ redText = '\033[91m\033[1m'
 endColor = '\033[0m'
 print "------------------"
 hostName = hostName.lower()
-if hostName[:7] == "http://" : hostName = hostName[:7]
-elif hostName[:8] == "https://" : hostName = hostName[:8]
-
+if hostName[:7] == "http://" : hostName = hostName[7:]
+elif hostName[:8] == "https://" : hostName = hostName[8:]
+if hostName.find('/') != -1:
+    hostName = hostName[:hostName.find('/')]
 sans = None
-
+hostNameIdna = hostName.decode('utf-8').encode("idna")
 try:
-	ipAddress = socket.gethostbyname(hostName)#IP
+	ipAddress = socket.gethostbyname(hostNameIdna)#IP
 	
 	sock = socket.socket()
-	sock.connect((hostName, 443))
+	sock.connect((hostNameIdna, 443))
 	peername = sock.getpeername()
 	ctx = SSL.Context(SSL.SSLv23_METHOD)
 	ctx.check_hostname = False
@@ -31,7 +30,7 @@ try:
 
 	sock_ssl = SSL.Connection(ctx, sock)
 	sock_ssl.set_connect_state()
-	sock_ssl.set_tlsext_host_name(hostName)
+	sock_ssl.set_tlsext_host_name(hostNameIdna)
 	sock_ssl.do_handshake()
 	x509 = sock_ssl.get_peer_certificate()
 	sock_ssl.close()
@@ -60,7 +59,7 @@ try:
 	print purpureText + hostName + greenText + ' resolves to '+ purpureText + ipAddress + endColor + "\n"
 	if sans != None:
 
-		if (hostName in sans) or ("*" + hostName[hostName.find('.'):] in sans):
+		if (hostNameIdna in sans) or ("*" + hostNameIdna[hostNameIdna.find('.'):] in sans):
 			print greenText + "The hostname " + purpureText + hostName + greenText+ " is correctly listed in the certificate." + endColor
 		else:
 			print redText + "The hostname " + purpureText + hostName + redText+ " is incorrectly listed in the certificate." + endColor
@@ -71,24 +70,31 @@ try:
 		if days > 0: 
 			print greenText +"The certificate will expire in"  + purpureText , days , greenText + "days." + endColor
 		else:
-			print endColor + "This certificate has expired" , days , "days befor." + endColor
+			print redText + "This certificate has expired" , days , "days before." + endColor
 
 		if issuer:
 			print greenText + "The certificate was issued by:\n" + purpureText + issuer + endColor
 		print 
 
-		print greenText+"Common name:"+endColor, x509.get_subject().commonName
+		if hostNameIdna != hostName :
+			print greenText+"PunyCode hostname:"+ endColor, hostNameIdna
+
+		print greenText+"Common name:"+ endColor, x509.get_subject().commonName
 
 		print greenText + "SANs : " + endColor
-		j = 0
-		for i in sans:
-			print i+";" ,
+                j = 0
+		for i in range(len(sans)):
+			print sans[i]+";" ,
 			j += 1
 			if j > 3:
 				j = 0 
 				print
-	else:
+                        if i == len(sans)-1 and j != 0: print 
+	        print greenText + "SSLShopper Link : \n" +endColor + "https://www.sslshopper.com/ssl-checker.html#hostname=" + hostNameIdna
+        else:
 		print redText + "Can't read the certificate" + endColor
+except socket.error:
+    print redText + "HostName is incorrect of 433 socket is closed!" + endColor
 except socket.gaierror: 
 	print hostName + redText + "'s server IP address could not be found." + endColor
-print "\n------------------"
+print "------------------"
