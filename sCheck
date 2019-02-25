@@ -66,7 +66,7 @@ try:
 except socket.error:
 	print redText + "Error while executing the script." + greenText + " \nPossible causes: " + endColor
 	print "* The node does not have a certificate."
-	print "* Telnet " + IpConnect + " 443 failed."
+	print "* Connection to " + IpConnect + " TimeOut."
 	print "------------------"
 	sys.exit()
 sans = []
