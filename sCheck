@@ -109,16 +109,16 @@ else:
 
 if issuer:
 	if x509.get_issuer().commonName != x509.get_subject().commonName:
-		print greenText + "Certificate was issued by:\n    " + endColor + issuer
+		print greenText + "Certificate was issued by:\n    " + purpureText + issuer
 	else:
-		print redText + "Certificate is self-signed: \n    " + endColor + issuer
+		print redText + "Certificate is self-signed: \n    " + purpureText + issuer
 
 if hostNameIdna != hostName :
-	print greenText + "PunyCode hostname:" + endColor, hostNameIdna
+	print greenText + "PunyCode hostname:" + purpureText, hostNameIdna
 
-print orangeText + "Subject:\n   " + endColor , x509.get_subject().commonName
+print orangeText + "Subject:\n   " + purpureText , x509.get_subject().commonName
 
-print orangeText + "Subject alternative names:" + endColor + "\n   ",
+print orangeText + "Subject alternative names:" + purpureText + "\n   ",
 j = 0
 for i in range(len(sans)):
 	print sans[i]+";" ,
