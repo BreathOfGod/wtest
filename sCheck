@@ -64,7 +64,7 @@ except socket.error:
 	print "* The node does not have a certificate.\n* Connection refused."
 	print "------------------"
 	sys.exit()
-
+sans = []
 for i in range(x509.get_extension_count()):
 	ext = x509.get_extension(i)
 	if ext.get_short_name() == "subjectAltName":#SANs
@@ -130,5 +130,4 @@ for i in range(len(sans)):
 	if i == len(sans)-1 and j != 0: print 
 
 print orangeText + "SSLShopper Link : \n    " + endColor + "https://www.sslshopper.com/ssl-checker.html#hostname=" + hostNameIdna
-
 print "------------------"
