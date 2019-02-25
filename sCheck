@@ -130,7 +130,4 @@ for i in range(len(sans)):
 
 print orangeText + "SSLShopper Link : \n    " + endColor + "https://www.sslshopper.com/ssl-checker.html#hostname=" + hostNameIdna
 
-
-#except socket.gaierror: 
-#	print hostName + redText + "'s server IP address could not be found." + endColor
 print "------------------"
