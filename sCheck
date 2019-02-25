@@ -19,7 +19,7 @@ elif len(sys.argv) == 3:
 	IsInputIpAdress = True
 else:
 	print redText + "Incorrect script call." + greenText + "\nUse the following call method:" + endColor
-	print greenText + "sCheck" + endColor + " HostName" + purpureText + " [ipAddress]" + endColor
+	print greenText + "sCheck" + orangeText + " HostName" + purpureText + " [ipAddress]" + endColor
 	sys.exit()
 
 hostName = hostName.lower()
@@ -61,7 +61,8 @@ try:
 	sock.close()
 except socket.error:
 	print redText + "Error while executing the script." + greenText + " \nPossible causes: " + endColor
-	print "* HostName not added on node\n* HostName do not resolve\n* 433 socket is closed!"
+	print "* The node does not have a certificate.\n* Connection refused."
+	print "------------------"
 	sys.exit()
 
 for i in range(x509.get_extension_count()):
