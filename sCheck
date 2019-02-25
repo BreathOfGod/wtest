@@ -43,9 +43,13 @@ except socket.error:
 print "------------------"
 try:
 	sock = socket.socket()
+	connectionTimeOut = 3
+	sock.settimeout(connectionTimeOut)
 	if IsInputIpAdress:
+		IpConnect = inputIpAdress
 		sock.connect((inputIpAdress, 443))
 	else:
+		IpConnect = ipAddress
 		sock.connect((ipAddress, 443))
 	peername = sock.getpeername()
 	ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -61,7 +65,8 @@ try:
 	sock.close()
 except socket.error:
 	print redText + "Error while executing the script." + greenText + " \nPossible causes: " + endColor
-	print "* The node does not have a certificate.\n* Connection refused."
+	print "* The node does not have a certificate."
+	print "* Telnet " + IpConnect + " 443 failed."
 	print "------------------"
 	sys.exit()
 sans = []
